@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ChatForm from "./components/ChatForm";
 import ChatMessage from "./components/ChatMessage";
 import { ChatMessageProps } from "@/app/types/ChatMessageProps";
-
+import { socket } from "./lib/socketClient";
 
 export default function Home() {
   const [messages, setMessages] = useState<ChatMessageProps[]>([]);
@@ -14,6 +14,10 @@ export default function Home() {
 
   const handleRoomJoin = (roomNumber: string) => {
     setRoom(roomNumber || "1");
+    socket.emit("joinRoom", {
+      room: roomNumber || "1",
+      userName: userName || "Anonymous",
+    });
     setJoined(true);
     setMessages([
       {
@@ -24,6 +28,48 @@ export default function Home() {
       },
     ]);
   };
+
+  const handleSendMessage = (message: string) => {
+    if (message.trim() === "") return;
+
+    const chatMessage: ChatMessageProps = {
+      isSystemMessage: false,
+      isOwnMessage: true,
+      message,
+      userName: userName || "Anonymous",
+    };
+
+    socket.emit("sendMessage", {
+      room,
+      message,
+      userName: userName || "Anonymous",
+    });
+
+    setMessages((prevMessages) => [...prevMessages, chatMessage]);
+  };
+
+  useEffect(() => {
+    socket.on("message", (message: ChatMessageProps) => {
+      console.log("Received message:", message);
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
+
+    socket.on("connect", () => {
+      console.log("Connected to the server");
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from the server");
+    });
+
+    return () => {
+      socket.off("message");
+      socket.off("connect");
+      socket.off("disconnect");
+    };
+
+  }, []);
+
   return (
     <div className="flex w-full mt-24 justify-center">
       {!joined ? (
@@ -73,7 +119,7 @@ export default function Home() {
               />
             ))}
           </div>
-          <ChatForm />
+          <ChatForm onSendMessage={handleSendMessage} />
         </div>
       )}
     </div>

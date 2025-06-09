@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "dev:socket": "NODE_OPTIONS='--loader ts-node/esm --trace-warning --no-warnings' ts-node server.mts",
-    "build": "next build",
-    "start": "next start",
+    "dev:socket": "NODE_OPTIONS='--loader ts-node/esm --trace-warnings --no-warnings' ts-node server.mts",
+    "build": "next build && tsc --project tsconfig.server.json",
+    "build:socket": "next build && tsc --project tsconfig.server.json",
+    "start": "node dist/server.mjs",
+    "start:socket": "node dist/server.mjs",
     "lint": "next lint"
   },
   "dependencies": {
@@ -14,7 +16,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
